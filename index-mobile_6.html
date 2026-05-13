@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="2motor"/>
+<meta name="theme-color" content="#111111"/>
+<link rel="manifest" href="manifest.json"/>
+<link rel="apple-touch-icon" href="icons/icon-192.png"/>
+<title>貳輪嶼車庫搜尋</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
+
+  :root {
+    --orange: #d85a30;
+    --orange-dark: #b84820;
+    --header: #111111;
+    --bg: #f7f7f7;
+    --card: #ffffff;
+    --text: #111111;
+    --muted: #888888;
+    --border: #ebebeb;
+    --tag-bg: #f2f2f2;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bot: env(safe-area-inset-bottom, 0px);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    font-family: 'Noto Sans TC', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior: none;
+  }
+
+  /* ── Header ── */
+  #header {
+    background: var(--header);
+    padding: calc(var(--safe-top) + 14px) 16px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .logo {
+    width: 38px; height: 38px;
+    background: var(--orange);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .header-text { flex: 1; }
+  .header-title { font-size: 15px; font-weight: 700; color: #fff; letter-spacing: 0.02em; }
+  .header-sub { font-size: 10px; color: rgba(255,255,255,0.35); margin-top: 2px; letter-spacing: 0.08em; }
+
+  /* ── Search bar ── */
+  #search-section {
+    background: var(--header);
+    padding: 0 16px 16px;
+  }
+
+  .search-row {
+    display: flex; align-items: center;
+    background: rgba(255,255,255,0.1);
+    border: 1.5px solid rgba(255,255,255,0.15);
+    border-radius: 14px;
+    padding: 0 10px 0 16px;
+    height: 50px;
+    gap: 8px;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .search-row:focus-within {
+    background: rgba(255,255,255,0.15);
+    border-color: var(--orange);
+  }
+
+  #q {
+    flex: 1; border: none; outline: none;
+    font-size: 15px; color: #fff;
+    background: transparent; font-family: inherit;
+    caret-color: var(--orange);
+  }
+  #q::placeholder { color: rgba(255,255,255,0.35); }
+
+  #search-btn {
+    width: 36px; height: 36px;
+    background: var(--orange); border: none; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; flex-shrink: 0;
+    transition: background 0.15s, transform 0.1s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #search-btn:active { background: var(--orange-dark); transform: scale(0.93); }
+
+  /* ── Scroll body ── */
+  #body {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 16px 16px calc(var(--safe-bot) + 16px);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  /* ── Section card ── */
+  .card {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 14px 16px;
+    border: 0.5px solid var(--border);
+  }
+
+  .section-title {
+    font-size: 11px; color: var(--muted);
+    letter-spacing: 0.06em; margin-bottom: 10px;
+    font-weight: 500;
+  }
+
+  /* ── Quick tags ── */
+  .tags {
+    display: flex; flex-wrap: wrap; gap: 7px;
+  }
+  .tag {
+    font-size: 13px; padding: 6px 14px;
+    border-radius: 30px;
+    border: 1px solid var(--border);
+    color: #444; background: var(--tag-bg);
+    cursor: pointer; font-family: inherit;
+    transition: all 0.12s;
+    -webkit-tap-highlight-color: transparent;
+    min-height: 36px; display: flex; align-items: center;
+  }
+  .tag:active { border-color: var(--orange); color: var(--orange); background: #fff5f2; transform: scale(0.96); }
+
+  /* ── Brand grid ── */
+  .brand-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .brand-btn {
+    background: var(--tag-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 6px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 5px;
+    cursor: pointer; font-family: inherit;
+    transition: all 0.12s;
+    -webkit-tap-highlight-color: transparent;
+    min-height: 72px;
+  }
+  .brand-btn:active { border-color: var(--orange); background: #fff5f2; transform: scale(0.96); }
+  .brand-icon {
+    font-size: 22px; line-height: 1;
+  }
+  .brand-name {
+    font-size: 11px; color: #444; font-weight: 500; text-align: center;
+  }
+  .brand-sub {
+    font-size: 9px; color: var(--muted);
+  }
+
+  /* ── Recent searches ── */
+  .history-list { display: flex; flex-direction: column; gap: 0; }
+  .history-item {
+    display: flex; align-items: center;
+    padding: 10px 0;
+    border-bottom: 0.5px solid var(--border);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    gap: 10px;
+  }
+  .history-item:last-child { border-bottom: none; }
+  .history-item:active { opacity: 0.6; }
+  .history-icon { color: var(--muted); flex-shrink: 0; }
+  .history-text { flex: 1; font-size: 14px; color: var(--text); }
+  .history-arrow { color: var(--muted); font-size: 12px; }
+
+  .clear-btn {
+    font-size: 11px; color: var(--orange);
+    background: none; border: none;
+    cursor: pointer; font-family: inherit;
+    padding: 0; margin-bottom: 10px;
+    display: block; text-align: right;
+    width: 100%;
+  }
+
+  /* ── Result URL bar ── */
+  #url-bar {
+    display: none;
+    background: var(--card);
+    border: 0.5px solid var(--border);
+    border-radius: 16px;
+    padding: 12px 14px;
+  }
+  #url-bar.show { display: block; }
+
+  .url-bar-top {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .url-label { font-size: 11px; color: var(--muted); letter-spacing: 0.05em; }
+
+  .url-actions { display: flex; gap: 6px; }
+  .url-action-btn {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 12px; padding: 6px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: var(--tag-bg); color: #333;
+    cursor: pointer; font-family: inherit;
+    min-height: 34px;
+    -webkit-tap-highlight-color: transparent;
+    transition: all 0.12s;
+  }
+  .url-action-btn:active { transform: scale(0.95); }
+  .url-action-btn.copy:active { border-color: var(--orange); color: var(--orange); }
+
+  .url-text {
+    font-family: monospace; font-size: 11px; color: #555;
+    word-break: break-all; line-height: 1.5;
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 10px;
+    user-select: all;
+  }
+  .url-text span { color: var(--orange); font-weight: 600; }
+
+  /* Toast */
+  #toast {
+    position: fixed; bottom: calc(var(--safe-bot) + 24px);
+    left: 50%; transform: translateX(-50%);
+    background: #111; color: #fff;
+    font-size: 13px; padding: 9px 20px; border-radius: 24px;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.2s; white-space: nowrap; z-index: 999;
+  }
+  #toast.show { opacity: 1; }
+
+
+  .cta-btn {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    background: var(--orange);
+    color: #fff;
+    border: none; border-radius: 14px;
+    padding: 15px;
+    font-size: 15px; font-weight: 700;
+    cursor: pointer; font-family: inherit;
+    width: 100%;
+    text-decoration: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.15s, transform 0.1s;
+    letter-spacing: 0.02em;
+  }
+  .cta-btn:active { background: var(--orange-dark); transform: scale(0.98); }
+
+  /* ── Install banner ── */
+  #install-banner {
+    background: linear-gradient(135deg, #1a1a2e, #16213e);
+    border-radius: 16px;
+    padding: 14px 16px;
+    display: none;
+    align-items: center;
+    gap: 12px;
+    border: 1px solid rgba(216,90,48,0.3);
+  }
+  #install-banner.show { display: flex; }
+  .install-text { flex: 1; }
+  .install-title { font-size: 13px; font-weight: 700; color: #fff; }
+  .install-sub { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 2px; }
+  #install-btn {
+    background: var(--orange); color: #fff;
+    border: none; border-radius: 8px;
+    padding: 8px 14px; font-size: 12px; font-weight: 700;
+    cursor: pointer; font-family: inherit; flex-shrink: 0;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* ── iOS install hint ── */
+  #ios-hint {
+    background: #1a1a2e;
+    border-radius: 16px;
+    padding: 14px 16px;
+    display: none;
+    border: 1px solid rgba(216,90,48,0.3);
+  }
+  #ios-hint.show { display: block; }
+  .ios-hint-title { font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+  .ios-steps { display: flex; flex-direction: column; gap: 6px; }
+  .ios-step {
+    display: flex; align-items: flex-start; gap: 8px;
+    font-size: 12px; color: rgba(255,255,255,0.7); line-height: 1.5;
+  }
+  .ios-step-num {
+    width: 18px; height: 18px; border-radius: 50%;
+    background: var(--orange); color: #fff;
+    font-size: 10px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  #ios-hint-close {
+    margin-top: 10px;
+    font-size: 11px; color: rgba(255,255,255,0.4);
+    background: none; border: none; cursor: pointer;
+    font-family: inherit; padding: 0;
+  }
+</style>
+</head>
+<body>
+
+<div id="header">
+  <div class="logo">
+    <svg width="24" height="18" viewBox="0 0 520 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M480 0 L200 0 L0 400 L130 400 L280 80 L380 400 L520 400 L480 0Z" fill="white"/>
+      <path d="M300 160 L200 400 L340 400 L390 260Z" fill="white"/>
+    </svg>
+  </div>
+  <div class="header-text">
+    <div class="header-title">貳輪嶼車庫搜尋</div>
+    <div class="header-sub">MOTOR ISLAND</div>
+  </div>
+</div>
+
+<div id="search-section">
+  <div class="search-row">
+    <input id="q" type="search" inputmode="search" placeholder="搜尋車款、品牌、排氣量..." autocomplete="off" spellcheck="false" enterkeyhint="search"/>
+    <button id="search-btn" aria-label="搜尋">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round">
+        <circle cx="11" cy="11" r="8"/>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+    </button>
+  </div>
+</div>
+
+<div id="body">
+
+  <!-- Install banners -->
+  <div id="install-banner">
+    <div class="install-text">
+      <div class="install-title">加入主畫面</div>
+      <div class="install-sub">像 App 一樣隨時開啟</div>
+    </div>
+    <button id="install-btn">安裝</button>
+  </div>
+
+  <div id="ios-hint">
+    <div class="ios-hint-title">📱 加到 iPhone 主畫面</div>
+    <div class="ios-steps">
+      <div class="ios-step"><span class="ios-step-num">1</span><span>點底部的「分享」按鈕 <strong>□↑</strong></span></div>
+      <div class="ios-step"><span class="ios-step-num">2</span><span>選擇「加入主畫面」</span></div>
+      <div class="ios-step"><span class="ios-step-num">3</span><span>點右上角「新增」完成</span></div>
+    </div>
+    <button id="ios-hint-close">已了解，不再顯示</button>
+  </div>
+
+  <!-- URL 複製區塊 -->
+  <div id="url-bar">
+    <div class="url-bar-top">
+      <span class="url-label">搜尋網址</span>
+      <div class="url-actions">
+        <button class="url-action-btn copy" id="copy-btn">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+          </svg>
+          複製網址
+        </button>
+        <button class="url-action-btn" id="open-btn">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/>
+          </svg>
+          開啟
+        </button>
+      </div>
+    </div>
+    <div class="url-text" id="url-text"></div>
+  </div>
+
+  <div id="toast">✓ 已複製網址</div>
+
+  <!-- Quick tags -->
+  <div class="card">
+    <div class="section-title">排氣量</div>
+    <div class="tags">
+      <button class="tag" onclick="qs('50')">50</button>
+      <button class="tag" onclick="qs('100')">100</button>
+      <button class="tag" onclick="qs('125')">125</button>
+      <button class="tag" onclick="qs('150')">150</button>
+      <button class="tag" onclick="qs('250')">250</button>
+      <button class="tag" onclick="qs('400')">400</button>
+      <button class="tag" onclick="qs('GOGORO')">GOGORO</button>
+    </div>
+  </div>
+
+  <!-- Brand grid -->
+  <div class="card">
+    <div class="section-title">品牌</div>
+    <div class="brand-grid">
+      <button class="brand-btn" onclick="qs('山葉 YAMAHA')">
+        <span class="brand-icon">🏍</span>
+        <span class="brand-name">山葉</span>
+        <span class="brand-sub">YAMAHA</span>
+      </button>
+      <button class="brand-btn" onclick="qs('三陽 SYM')">
+        <span class="brand-icon">🛵</span>
+        <span class="brand-name">三陽</span>
+        <span class="brand-sub">SYM</span>
+      </button>
+      <button class="brand-btn" onclick="qs('光陽 KYMCO')">
+        <span class="brand-icon">🏍</span>
+        <span class="brand-name">光陽</span>
+        <span class="brand-sub">KYMCO</span>
+      </button>
+      <button class="brand-btn" onclick="qs('Honda')">
+        <span class="brand-icon">🛵</span>
+        <span class="brand-name">Honda</span>
+        <span class="brand-sub">本田</span>
+      </button>
+      <button class="brand-btn" onclick="qs('Suzuki')">
+        <span class="brand-icon">🏍</span>
+        <span class="brand-name">Suzuki</span>
+        <span class="brand-sub">鈴木</span>
+      </button>
+      <button class="brand-btn" onclick="qs('Kawasaki')">
+        <span class="brand-icon">🏍</span>
+        <span class="brand-name">Kawasaki</span>
+        <span class="brand-sub">川崎</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Recent searches -->
+  <div class="card" id="history-card" style="display:none">
+    <div class="section-title">最近搜尋</div>
+    <button class="clear-btn" onclick="clearHistory()">清除</button>
+    <div class="history-list" id="history-list"></div>
+  </div>
+
+  <!-- CTA -->
+  <a class="cta-btn" href="https://shop.2motor.tw/collections/all" target="_blank" rel="noopener">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
+    瀏覽全部車庫
+  </a>
+
+</div>
+
+<script>
+  // ── Service Worker ──────────────────────────────────
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  }
+
+  // ── Search ──────────────────────────────────────────
+  const input = document.getElementById('q');
+  const urlBar = document.getElementById('url-bar');
+  const urlText = document.getElementById('url-text');
+  let currentUrl = '';
+
+  function doSearch(keyword) {
+    const q = (keyword || input.value).trim();
+    if (!q) return;
+    currentUrl = 'https://shop.2motor.tw/search?q=' + encodeURIComponent(q);
+    saveHistory(q);
+
+    // 顯示網址列
+    const base = 'https://shop.2motor.tw/search?q=';
+    urlText.innerHTML = `<span>${base}</span>${encodeURIComponent(q)}`;
+    urlBar.classList.add('show');
+
+    // 滾到網址列
+    urlBar.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function qs(term) { input.value = term; doSearch(term); }
+
+  document.getElementById('search-btn').addEventListener('click', () => doSearch());
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
+
+  document.getElementById('copy-btn').addEventListener('click', () => {
+    if (!currentUrl) return;
+    navigator.clipboard.writeText(currentUrl).then(() => showToast('✓ 已複製網址'));
+  });
+
+  document.getElementById('open-btn').addEventListener('click', () => {
+    if (currentUrl) window.open(currentUrl, '_blank');
+  });
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 1800);
+  }
+
+  // ── History ──────────────────────────────────────────
+  function loadHistory() {
+    try { return JSON.parse(localStorage.getItem('2m-history') || '[]'); } catch { return []; }
+  }
+  function saveHistory(q) {
+    let h = loadHistory().filter(x => x !== q);
+    h.unshift(q);
+    h = h.slice(0, 8);
+    try { localStorage.setItem('2m-history', JSON.stringify(h)); } catch {}
+    renderHistory();
+  }
+  function clearHistory() {
+    try { localStorage.removeItem('2m-history'); } catch {}
+    renderHistory();
+  }
+  function renderHistory() {
+    const h = loadHistory();
+    const card = document.getElementById('history-card');
+    const list = document.getElementById('history-list');
+    if (h.length === 0) { card.style.display = 'none'; return; }
+    card.style.display = 'block';
+    list.innerHTML = h.map(item => `
+      <div class="history-item" onclick="qs('${item.replace(/'/g,"\\'")}')">
+        <span class="history-icon">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </span>
+        <span class="history-text">${item}</span>
+        <span class="history-arrow">›</span>
+      </div>
+    `).join('');
+  }
+  renderHistory();
+
+  // ── PWA Install ──────────────────────────────────────
+
+  // Android / Chrome
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    deferredPrompt = e;
+    document.getElementById('install-banner').classList.add('show');
+  });
+
+  document.getElementById('install-btn').addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const result = await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    document.getElementById('install-banner').classList.remove('show');
+  });
+
+  // iOS Safari hint
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isStandalone = window.navigator.standalone === true;
+  const hintDismissed = localStorage.getItem('2m-ios-hint');
+
+  if (isIOS && !isStandalone && !hintDismissed) {
+    document.getElementById('ios-hint').classList.add('show');
+  }
+
+  document.getElementById('ios-hint-close').addEventListener('click', () => {
+    localStorage.setItem('2m-ios-hint', '1');
+    document.getElementById('ios-hint').classList.remove('show');
+  });
+</script>
+</body>
+</html>
