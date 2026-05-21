@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#1a1a2e">
+<title>貳輪嶼內部查詢</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; background: #f5f4f0; font-family: -apple-system, BlinkMacSystemFont, "Noto Sans TC", sans-serif; }
+
+/* 首頁 */
+#page-home {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+#home-header {
+  background: #1a1a2e;
+  padding: 20px 20px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+#home-logo {
+  width: 44px; height: 44px;
+  border-radius: 10px;
+  background: #d85a30;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden; flex-shrink: 0;
+}
+#home-logo img { width: 38px; height: 38px; object-fit: contain; }
+#home-header-text h1 { color: #fff; font-size: 17px; font-weight: 700; }
+#home-header-text p { color: #8888aa; font-size: 11px; margin-top: 2px; }
+
+#home-cards {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 32px 20px;
+  max-width: 500px;
+  width: 100%;
+  margin: 0 auto;
+}
+.home-card {
+  border-radius: 20px;
+  padding: 28px 22px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.12s, opacity 0.12s;
+  text-align: center;
+  -webkit-user-select: none;
+}
+.home-card:active { transform: scale(0.96); opacity: 0.85; }
+.card-lookup {
+  background: #111;
+  border: 1.5px solid #333;
+}
+.card-search {
+  background: #fff;
+  border: 1.5px solid #e8e4dc;
+  box-shadow: 0 3px 18px rgba(0,0,0,0.08);
+}
+.card-icon { font-size: 44px; line-height: 1; margin-bottom: 4px; }
+.card-title-lookup { font-size: 20px; font-weight: 700; color: #fff; }
+.card-title-search { font-size: 20px; font-weight: 700; color: #1a1a2e; }
+.card-sub-lookup { font-size: 12px; color: #999; line-height: 1.7; }
+.card-sub-search { font-size: 12px; color: #888; line-height: 1.7; }
+.card-arrow-lookup { font-size: 24px; color: #d9ff00; margin-top: 6px; }
+.card-arrow-search { font-size: 24px; color: #d85a30; margin-top: 6px; }
+
+#home-footer { text-align: center; font-size: 11px; color: #bbb; padding: 10px 0 36px; }
+
+/* iframe 容器 */
+#page-iframe {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 100;
+  background: #fff;
+}
+#page-iframe iframe {
+  width: 100%; height: 100%;
+  border: none;
+  display: block;
+}
+</style>
+</head>
+<body>
+
+<!-- 首頁 -->
+<div id="page-home">
+  <div id="home-header">
+    <div id="home-logo">
+      <img id="home-logo-img" src="" alt="logo"/>
+    </div>
+    <div id="home-header-text">
+      <h1>貳輪嶼內部專用查詢</h1>
+      <p>MOTOR ISLAND</p>
+    </div>
+  </div>
+
+  <div id="home-cards">
+    <div class="home-card card-lookup" onclick="openApp('lookup')">
+      <div class="card-icon">📍</div>
+      <div class="card-title-lookup">門市地區查詢</div>
+      <div class="card-sub-lookup">輸入客人所在地區<br>快速找到對應門市與交通資訊</div>
+      <div class="card-arrow-lookup">›</div>
+    </div>
+
+    <div class="home-card card-search" onclick="openApp('search')">
+      <div class="card-icon">🔍</div>
+      <div class="card-title-search">線上車庫網址查詢</div>
+      <div class="card-sub-search">依門市、年份、廠牌、車款條件<br>快速產生搜尋網址分享給客人</div>
+      <div class="card-arrow-search">›</div>
+    </div>
+  </div>
+
+  <div id="home-footer">貳輪嶼 Motor Island · 內部工具</div>
+</div>
+
+<!-- iframe 容器 -->
+<div id="page-iframe">
+  <iframe id="app-frame" src="" allow="clipboard-write"></iframe>
+</div>
+
+<script>
+const LOGO_B64 = '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';
+document.getElementById('home-logo-img').src = 'data:image/png;base64,' + LOGO_B64;
+
+function openApp(type) {
+  const src = type === 'lookup' ? './lookup-app.html' : './search-app.html';
+  document.getElementById('app-frame').src = src;
+  document.getElementById('page-home').style.display = 'none';
+  document.getElementById('page-iframe').style.display = 'block';
+}
+
+function goHome() {
+  document.getElementById('page-home').style.display = 'flex';
+  document.getElementById('page-iframe').style.display = 'none';
+  document.getElementById('app-frame').src = '';
+}
+</script>
+</body>
+</html>
