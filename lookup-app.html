@@ -94,9 +94,8 @@ footer{text-align:center;font-size:11px;color:var(--sub);padding:28px 0 0;opacit
 </style>
 </head>
 <body>
-<header style="position:relative;display:flex;align-items:center;justify-content:center;padding:14px 20px 10px">
-  <button onclick="window.parent.goHome()" style="position:absolute;left:14px;background:rgba(255,255,255,0.15);border:none;border-radius:8px;width:32px;height:32px;font-size:20px;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:300">‹</button>
-  <h1 style="font-size:16px;font-weight:600;letter-spacing:1px">貳輪嶼 MOTOR ISLAND｜全台門市查詢</h1>
+<header>
+  <h1>貳輪嶼 MOTOR ISLAND｜全台門市查詢</h1>
 </header>
 <div class="quote-bar" id="quote-bar">載入今日金句中…</div>
 
@@ -153,6 +152,11 @@ footer{text-align:center;font-size:11px;color:var(--sub);padding:28px 0 0;opacit
   </div>
 
   <footer>資料最後更新：2025/05/20</footer>
+<div style="padding:16px 20px 40px;text-align:center">
+  <button onclick="window.parent.postMessage('goHome','*')" style="width:100%;max-width:400px;padding:14px;font-size:15px;font-weight:600;border-radius:14px;border:1.5px solid #ddd;background:#fff;color:#333;cursor:pointer;-webkit-tap-highlight-color:transparent">
+    回APP首頁
+  </button>
+</div>
 </div>
 
 <script>
